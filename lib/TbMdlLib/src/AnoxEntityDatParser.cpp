@@ -91,7 +91,11 @@ std::optional<vm::vec3d> parseVec3(
 std::optional<ModelDefinition> parseModelDefinition(
   const std::string& modelPath, const vm::vec3d& scale, const FileLocation& location)
 {
-  if (modelPath.empty() || kdl::ci::str_is_equal(modelPath, "none"))
+  // entities without a model use "none" or "nomodel", and entities that use one of the
+  // engine's procedural models use its number, e.g. "#1"
+  if (
+    modelPath.empty() || kdl::ci::str_is_equal(modelPath, "none")
+    || kdl::ci::str_is_equal(modelPath, "nomodel") || modelPath.starts_with('#'))
   {
     return std::nullopt;
   }

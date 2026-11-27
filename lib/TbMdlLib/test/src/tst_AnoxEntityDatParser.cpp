@@ -123,14 +123,19 @@ TEST_CASE("AnoxEntityDatParser")
   SECTION("omits the model if there is none")
   {
     const auto file = R"(ob_none|none|1|1|1|general|-8|-8|-8|8|8|8
-ob_empty||1|1|1|general|-8|-8|-8|8|8|8)";
+ob_empty||1|1|1|general|-8|-8|-8|8|8|8
+info_generator|nomodel|1|1|1|general|-8|-8|-8|8|8|8
+proc_hypercube|#1|1|1|1|general|-8|-8|-8|8|8|8)";
 
     auto parser = AnoxEntityDatParser{file, defaultColor};
     const auto definitions = parser.parseDefinitions(status).value();
-    REQUIRE(definitions.size() == 2u);
+    REQUIRE(definitions.size() == 4u);
 
-    CHECK(getModelSpecification(definitions[0]) == ModelSpecification{});
-    CHECK(getModelSpecification(definitions[1]) == ModelSpecification{});
+    for (const auto& definition : definitions)
+    {
+      CAPTURE(definition.name);
+      CHECK(getModelSpecification(definition) == ModelSpecification{});
+    }
   }
 
   SECTION("repairs inverted bounds")
