@@ -3307,6 +3307,8 @@ In the case of Quake 2, the builtin game configuration specifies the search path
 
 TrenchBroom supports a wide array of image formats such as tga, pcx, jpeg, and so on. TrenchBroom uses the [FreeImage Library] to load these images and supports any file type supported by this library.
 
+Anachronox animated textures (atd) are supported, but TrenchBroom only shows the first frame of the animation.
+
 Optionally, you can specify a palette. The value of the `palette` key specifies a path, relative to the file system, where TrenchBroom will look for a palette file that comes with the game's assets.
 
 The `attribute` key specifies the name of a worldspawn property where TrenchBroom will store the wad files in the map file.

@@ -44,6 +44,7 @@ target_sources(TbMdlLibTest PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src/tst_LoadAnoxMd2Model.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/tst_LoadAseModel.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/tst_LoadAssimpModel.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/tst_LoadAtdTexture.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/tst_LoadBspModel.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/tst_LoadDdsTexture.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/tst_LoadDkmModel.cpp

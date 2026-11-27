@@ -80,6 +80,7 @@ target_sources(TbMdlLib
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadAnoxMd2Model.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadAseModel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadAssimpModel.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadAtdTexture.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadBspModel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadDdsTexture.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadDkmModel.cpp
