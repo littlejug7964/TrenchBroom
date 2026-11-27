@@ -69,11 +69,11 @@ Result<EntityModelData> loadEntityModelData(
            }
            if (canLoadAnoxMd2Model(path, reader))
            {
-             return loadAnoxMd2Model(modelName, reader, fs, logger);
+             return loadAnoxMd2Model(path, reader, fs, logger);
            }
            if (canLoadMdaModel(path, reader))
            {
-             return loadMdaModel(modelName, reader, fs, logger);
+             return loadMdaModel(reader, fs, logger);
            }
            if (canLoadBspModel(path, reader))
            {

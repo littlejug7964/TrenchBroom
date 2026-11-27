@@ -78,7 +78,7 @@ bool canLoadMdaModel(const std::filesystem::path& path, fs::Reader reader);
  * default profile. Only Anachronox MD2 base models are supported.
  */
 Result<EntityModelData> loadMdaModel(
-  std::string name, fs::Reader reader, const fs::FileSystem& fs, Logger& logger);
+  fs::Reader reader, const fs::FileSystem& fs, Logger& logger);
 
 } // namespace mdl
 } // namespace tb

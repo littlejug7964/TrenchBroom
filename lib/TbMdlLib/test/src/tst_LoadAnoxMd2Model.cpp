@@ -89,7 +89,8 @@ TEST_CASE("loadAnoxMd2Model")
 
     const auto file = openModel(modelName);
     const auto modelData =
-      loadAnoxMd2Model(modelName, file->reader().buffer(), fs, logger) | kdl::value();
+      loadAnoxMd2Model("models/test/" + modelName, file->reader().buffer(), fs, logger)
+      | kdl::value();
 
     CHECK(modelData.pitchType() == PitchType::Normal);
     CHECK(modelData.orientation() == Orientation::Oriented);
@@ -112,7 +113,8 @@ TEST_CASE("loadAnoxMd2Model")
   {
     const auto file = openModel("res2.md2");
     const auto modelData =
-      loadAnoxMd2Model("res2.md2", file->reader().buffer(), fs, logger) | kdl::value();
+      loadAnoxMd2Model("models/test/res2.md2", file->reader().buffer(), fs, logger)
+      | kdl::value();
 
     REQUIRE(modelData.surfaceCount() == 2u);
 
@@ -130,13 +132,30 @@ TEST_CASE("loadAnoxMd2Model")
     CHECK(logger.countMessages(LogLevel::Error) == 0);
   }
 
+  SECTION("finds skins next to the model")
+  {
+    // bare_skins.md2 refers to its skins as SKIN_A.BMP and models\test\skin_b.bmp
+    const auto file = openModel("bare_skins.md2");
+    const auto modelData =
+      loadAnoxMd2Model("models/test/bare_skins.md2", file->reader().buffer(), fs, logger)
+      | kdl::value();
+
+    REQUIRE(modelData.surfaceCount() == 2u);
+    CHECK(modelData.surface(0).skin(0u)->texture()->width() == 16u);
+    CHECK(modelData.surface(1).skin(0u)->texture()->width() == 8u);
+    CHECK(logger.countMessages(LogLevel::Error) == 0);
+  }
+
   SECTION("replaces skins")
   {
     const auto file = openModel("res2.md2");
-    const auto modelData =
-      loadAnoxMd2Model(
-        "res2.md2", file->reader().buffer(), fs, logger, {"models/test/profile_a.tga"})
-      | kdl::value();
+    const auto modelData = loadAnoxMd2Model(
+                             "models/test/res2.md2",
+                             file->reader().buffer(),
+                             fs,
+                             logger,
+                             {"models/test/profile_a.tga"})
+                           | kdl::value();
 
     REQUIRE(modelData.surfaceCount() == 2u);
     CHECK(modelData.surface(0).name() == "profile_a");
@@ -148,7 +167,8 @@ TEST_CASE("loadAnoxMd2Model")
   {
     const auto file = openModel("unknown_resolution.md2");
     CHECK(
-      loadAnoxMd2Model("unknown_resolution.md2", file->reader().buffer(), fs, logger)
+      loadAnoxMd2Model(
+        "models/test/unknown_resolution.md2", file->reader().buffer(), fs, logger)
       == Result<EntityModelData>{Error{"Unknown Anachronox MD2 model resolution"}});
   }
 
@@ -156,7 +176,8 @@ TEST_CASE("loadAnoxMd2Model")
   {
     const auto file = openModel("too_many_primitives.md2");
     CHECK(
-      loadAnoxMd2Model("too_many_primitives.md2", file->reader().buffer(), fs, logger)
+      loadAnoxMd2Model(
+        "models/test/too_many_primitives.md2", file->reader().buffer(), fs, logger)
       == Result<EntityModelData>{
         Error{"Primitive counts add up to 3, but model has only 2 primitives"}});
   }

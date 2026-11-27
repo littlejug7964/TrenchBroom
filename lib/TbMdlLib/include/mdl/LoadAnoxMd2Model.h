@@ -24,7 +24,6 @@
 #include "mdl/EntityModel.h"
 
 #include <filesystem>
-#include <string>
 #include <vector>
 
 namespace tb
@@ -51,11 +50,13 @@ bool canLoadAnoxMd2Model(const std::filesystem::path& path, fs::Reader reader);
  * Every skin of an Anachronox MD2 model is applied to its own set of primitives, so the
  * model is loaded with one surface per skin.
  *
+ * Skins are looked up relative to the game file system and in the model's directory.
+ *
  * If skin paths are given, the n-th of these replaces the n-th skin stored in the model.
  * This is used to apply the skins of an MDA model description.
  */
 Result<EntityModelData> loadAnoxMd2Model(
-  std::string name,
+  const std::filesystem::path& path,
   fs::Reader reader,
   const fs::FileSystem& fs,
   Logger& logger,

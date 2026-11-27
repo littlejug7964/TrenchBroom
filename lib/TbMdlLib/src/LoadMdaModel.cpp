@@ -331,7 +331,7 @@ bool canLoadMdaModel(const std::filesystem::path& path, fs::Reader reader)
 }
 
 Result<EntityModelData> loadMdaModel(
-  std::string name, fs::Reader reader, const fs::FileSystem& fs, Logger& logger)
+  fs::Reader reader, const fs::FileSystem& fs, Logger& logger)
 {
   return parseMda(reader.buffer().stringView()) | kdl::and_then([&](const auto& mda) {
            const auto* profile = defaultProfile(mda);
@@ -347,7 +347,7 @@ Result<EntityModelData> loadMdaModel(
                           fmt::format("Unsupported base model '{}'", mda.baseModel)};
                       }
                       return loadAnoxMd2Model(
-                        std::move(name), baseModelReader, fs, logger, skins);
+                        mda.baseModel, baseModelReader, fs, logger, skins);
                     });
          });
 }

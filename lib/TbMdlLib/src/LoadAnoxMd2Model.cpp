@@ -30,6 +30,7 @@
 #include "mdl/LoadSkin.h"
 #include "mdl/MaterialUtils.h"
 
+#include "kd/k.h"
 #include "kd/path_utils.h"
 #include "kd/ranges/to.h"
 #include "kd/result.h"
@@ -240,25 +241,58 @@ Result<std::vector<std::vector<AnoxMd2Mesh>>> groupMeshesBySkin(
   return result;
 }
 
-std::vector<std::string> parseSkins(fs::Reader reader, const size_t count)
+std::vector<std::filesystem::path> parseSkins(fs::Reader reader, const size_t count)
 {
-  auto skins = std::vector<std::string>{};
+  auto skins = std::vector<std::filesystem::path>{};
   skins.reserve(count);
 
   for (size_t i = 0; i < count; ++i)
   {
-    skins.push_back(reader.readString(AnoxMd2Layout::SkinNameLength));
+    skins.push_back(kdl::parse_utf8_or_latin1_path(
+      reader.readString(AnoxMd2Layout::SkinNameLength), K(convert_separators)));
   }
 
   return skins;
 }
 
-gl::Material loadAnoxSkin(
-  const std::filesystem::path& path, const fs::FileSystem& fs, Logger& logger)
+/**
+ * Finds the file of the given skin.
+ *
+ * Most skins are referred to by their file name only and are found next to the model.
+ * Many models refer to their skins as BMP files, but the skins are actually TGA or PNG
+ * files, so the skin is also looked up with other image extensions.
+ */
+std::filesystem::path findSkinFile(
+  const std::filesystem::path& skinPath,
+  const std::filesystem::path& modelPath,
+  const fs::FileSystem& fs)
 {
-  const auto actualPath =
-    findMaterialFile(fs, path, SkinExtensions) | kdl::value_or(path);
-  return loadSkin(actualPath, fs, logger);
+  auto candidates = std::vector<std::filesystem::path>{};
+  if (skinPath.has_parent_path())
+  {
+    candidates.push_back(skinPath);
+  }
+  candidates.push_back(modelPath.parent_path() / skinPath.filename());
+
+  for (const auto& candidate : candidates)
+  {
+    if (auto skinFile = findMaterialFile(fs, candidate, SkinExtensions);
+        skinFile.is_success())
+    {
+      return std::move(skinFile).value();
+    }
+  }
+
+  return skinPath;
+}
+
+gl::Material loadAnoxSkin(
+  const std::filesystem::path& skinPath,
+  const std::filesystem::path& modelPath,
+  const fs::FileSystem& fs,
+  Logger& logger)
+{
+  return loadSkin(findSkinFile(skinPath, modelPath, fs), fs, logger);
 }
 
 std::vector<EntityModelVertex> getVertices(
@@ -339,7 +373,7 @@ bool canLoadAnoxMd2Model(const std::filesystem::path& path, fs::Reader reader)
 }
 
 Result<EntityModelData> loadAnoxMd2Model(
-  std::string name,
+  const std::filesystem::path& path,
   fs::Reader reader,
   const fs::FileSystem& fs,
   Logger& logger,
@@ -400,16 +434,17 @@ Result<EntityModelData> loadAnoxMd2Model(
                for (size_t i = 0; i < meshesBySkin.size(); ++i)
                {
                  const auto skinPath = i < skinPaths.size() ? skinPaths[i]
-                                       : i < skins.size()
-                                         ? std::filesystem::path{skins[i]}
-                                         : std::filesystem::path{};
+                                       : i < skins.size()   ? skins[i]
+                                                            : std::filesystem::path{};
 
                  auto& surface = data.addSurface(
-                   !skinPath.empty() ? skinPath.stem().string() : name, frameCount);
+                   !skinPath.empty() ? skinPath.stem().string()
+                                     : path.filename().string(),
+                   frameCount);
                  if (!skinPath.empty())
                  {
                    auto materials = std::vector<gl::Material>{};
-                   materials.push_back(loadAnoxSkin(skinPath, fs, logger));
+                   materials.push_back(loadAnoxSkin(skinPath, path, fs, logger));
                    surface.setSkins(std::move(materials));
                  }
                }

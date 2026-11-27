@@ -136,7 +136,7 @@ $ANIP:14:14:12345678
       const auto file =
         fs::Disk::openFile(fixturePath / "models/test/model.mda") | kdl::value();
       const auto modelData =
-        loadMdaModel("model.mda", file->reader().buffer(), fs, logger) | kdl::value();
+        loadMdaModel(file->reader().buffer(), fs, logger) | kdl::value();
 
       CHECK(modelData.frameCount() == 2u);
       REQUIRE(modelData.surfaceCount() == 2u);
@@ -151,8 +151,7 @@ $ANIP:14:14:12345678
     {
       const auto file =
         fs::Disk::openFile(fixturePath / "models/test/no_basemodel.mda") | kdl::value();
-      CHECK(
-        loadMdaModel("no_basemodel.mda", file->reader().buffer(), fs, logger).is_error());
+      CHECK(loadMdaModel(file->reader().buffer(), fs, logger).is_error());
     }
   }
 }
