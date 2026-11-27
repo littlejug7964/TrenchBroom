@@ -46,7 +46,7 @@ namespace
 
 bool isEntityDefinitionFile(const std::filesystem::path& path)
 {
-  static const auto extensions = {".fgd", ".def", ".ent"};
+  static const auto extensions = {".fgd", ".def", ".ent", ".dat"};
 
   return std::ranges::any_of(extensions, [&](const auto& extension) {
     return kdl::path_has_extension(kdl::path_to_lower(path), extension);

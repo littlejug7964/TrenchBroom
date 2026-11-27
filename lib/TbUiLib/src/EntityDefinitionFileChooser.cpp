@@ -272,10 +272,11 @@ void EntityDefinitionFileChooser::chooseExternalClicked()
     nullptr,
     tr("Load Entity Definition File"),
     fileDialogDefaultDirectory(FileDialogDir::EntityDefinition),
-    "All supported entity definition files (*.fgd *.def *.ent);;"
+    "All supported entity definition files (*.fgd *.def *.ent *.dat);;"
     "Worldcraft / Hammer files (*.fgd);;"
     "QuakeC files (*.def);;"
-    "Radiant XML files (*.ent)");
+    "Radiant XML files (*.ent);;"
+    "Anachronox entity files (*.dat)");
 
   if (!fileName.isEmpty())
   {

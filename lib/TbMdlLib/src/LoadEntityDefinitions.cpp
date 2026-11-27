@@ -21,6 +21,7 @@
 
 #include "fs/DiskIO.h"
 #include "fs/File.h"
+#include "mdl/AnoxEntityDatParser.h"
 #include "mdl/DefParser.h"
 #include "mdl/EntParser.h"
 #include "mdl/FgdParser.h"
@@ -72,6 +73,10 @@ Result<std::vector<EntityDefinition>> parseEntityDefinitions(
   if (extension == ".ent")
   {
     return parseEntityDefinitions<EntParser>(file, status, defaultColor);
+  }
+  if (extension == ".dat")
+  {
+    return parseEntityDefinitions<AnoxEntityDatParser>(file, status, defaultColor);
   }
 
   return Error{fmt::format("Unknown entity definition format: {}", path)};
