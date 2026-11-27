@@ -312,6 +312,30 @@ auto findEntityDefinitionFile(
   return fs::Disk::resolvePath(searchPaths, spec.path);
 }
 
+void addGameEntityDefinitions(
+  std::vector<EntityDefinition>& entityDefinitions,
+  const fs::FileSystem& gameFileSystem,
+  const EntityConfig& entityConfig,
+  ParserStatus& status,
+  Logger& logger)
+{
+  for (const auto& path : entityConfig.gameDefFilePaths)
+  {
+    loadEntityDefinitions(gameFileSystem, path, entityConfig.defaultColor, status)
+      | kdl::transform([&](auto gameEntityDefinitions) {
+          logger.info() << fmt::format(
+            "Loaded entity definition file {} from the game file system", path);
+          addEntityDefinitions(entityDefinitions, std::move(gameEntityDefinitions));
+        })
+      | kdl::transform_error([&](auto e) {
+          logger.warn() << fmt::format(
+            "Could not load entity definition file {} from the game file system: {}",
+            path,
+            e.msg);
+        });
+  }
+}
+
 auto makeInitializeNodeTagsVisitor(TagManager& tagManager)
 {
   return kdl::overload(
@@ -1260,6 +1284,12 @@ void Map::loadEntityDefinitions()
           logger().info() << fmt::format(
             "Loaded entity definition file {}", path.filename());
 
+          addGameEntityDefinitions(
+            entityDefinitions,
+            *m_gameFileSystem,
+            gameConfig.entityConfig,
+            status,
+            logger());
           addOrSetDefaultEntityLinkProperties(entityDefinitions);
           addOrConvertOriginProperties(entityDefinitions);
 

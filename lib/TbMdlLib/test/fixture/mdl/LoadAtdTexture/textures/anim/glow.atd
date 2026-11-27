@@ -1,0 +1,12 @@
+ATD1
+# an animated texture
+type=animation
+colortype=1
+width=8
+height=4
+
+!bitmap file=textures/anim/glow1.tga
+!bitmap file=glow2.tga
+
+!frame bitmap=1 next=1 wait=0.1
+!frame bitmap=0 next=0 wait=0.1

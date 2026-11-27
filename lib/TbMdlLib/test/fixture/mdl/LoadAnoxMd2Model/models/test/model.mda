@@ -1,0 +1,36 @@
+MDA1
+# test model description
+basemodel models/test/res2.md2
+
+profile {
+  evaluate "true"
+  skin {
+    pass {
+      map models/test/profile_a
+      alphafunc ge128
+    }
+  }
+  skin {
+    pass {
+      map models/test/profile_b.tga
+      blendmode add
+    }
+    pass {
+      map models/test/skin_a.tga
+    }
+  }
+}
+
+profile RED {
+  skin {
+    pass {
+      map models/test/skin_a.tga
+    }
+  }
+}
+
+headtri 1 2 3
+
+# ABSOLUTELY do not modify the following! It is binary data used by Anachronox.
+$ANIP:14:14:12345678
+&0123456789ABCDEF

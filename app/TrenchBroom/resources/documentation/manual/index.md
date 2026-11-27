@@ -30,10 +30,10 @@ TrenchBroom is a level editing program for brush-based game engines such as Quak
   - Multiple material collections
 * **Entity Editing**
   - Entity browser with drag and drop support
-  - Support for FGD, ENT and DEF files for entity definitions
+  - Support for FGD, ENT and DEF files for entity definitions, and Anachronox entity lists
   - Mod support
   - Entity link visualization
-  - Displays 3D models in the editor (supports mdl, md2, md3, bsp, dkm)
+  - Displays 3D models in the editor (supports mdl, md2, md3, bsp, dkm, Anachronox md2 and mda)
   - Smart entity property editors
 
 ## About this Document
@@ -296,7 +296,7 @@ Mods are stored in a worldspawn property called "_tb_mod".
 
 ### Loading Entity Definitions {#entity_definition_setup}
 
-![Entity definition editor](images/EntityDefinitionEditor.png) Entity definitions are text files containing information about [the meaning of entities and their properties](#entity_definitions). Depending on the game and mod you are mapping for, you might want to load different entity definitions into the editor. To load an entity definition file into TrenchBroom, switch to the entity inspector and click on the entity browser title bar where it says "Settings". The entity definition browser is horizontally divided into two areas. The upper area contains a list of _builtin_ entity definition files. These are the entity definition files that came with TrenchBroom for the game you are currently working on. You can select one of these builtin files by clicking on it. TrenchBroom will load the file and update its resources accordingly. Alternatively, you may want to load an external entity definition file of your own. To do this, click the button labeled "Browse" in the lower area of the entity definition browser and choose the file you wish to load. Currently, TrenchBroom supports Radiant DEF files and ENT files as well as [Valve FGD][FGD File Format] files. To reload the entity definitions (as well as the referenced models) from the currently loaded external file, you can click the button labeled "Reload" at the bottom or use #menu(Menu/File/Reload Assets). This may be useful if you're editing an entity definition file for a mod you're working on.
+![Entity definition editor](images/EntityDefinitionEditor.png) Entity definitions are text files containing information about [the meaning of entities and their properties](#entity_definitions). Depending on the game and mod you are mapping for, you might want to load different entity definitions into the editor. To load an entity definition file into TrenchBroom, switch to the entity inspector and click on the entity browser title bar where it says "Settings". The entity definition browser is horizontally divided into two areas. The upper area contains a list of _builtin_ entity definition files. These are the entity definition files that came with TrenchBroom for the game you are currently working on. You can select one of these builtin files by clicking on it. TrenchBroom will load the file and update its resources accordingly. Alternatively, you may want to load an external entity definition file of your own. To do this, click the button labeled "Browse" in the lower area of the entity definition browser and choose the file you wish to load. Currently, TrenchBroom supports Radiant DEF files and ENT files, [Valve FGD][FGD File Format] files and Anachronox entity lists (`entity.dat`). To reload the entity definitions (as well as the referenced models) from the currently loaded external file, you can click the button labeled "Reload" at the bottom or use #menu(Menu/File/Reload Assets). This may be useful if you're editing an entity definition file for a mod you're working on.
 
 Return to the entity browser by clicking on the entity browser title bar again where it says "Browser".
 
@@ -3283,7 +3283,11 @@ Format       Description
 ------       -----------
 idpak        Id pak file
 dkpak        Daikatana pak file
+anoxdat      Anachronox data package (.dat), mounted at its lowercase name, e.g. `MODELS.dat` at `models`
+anox         Anachronox's file system, see below
 zip          Zip file, often uses other extensions such as pk3
+
+Usually, packages take precedence over loose files, and packages that come later in natural order take precedence over packages that come earlier. The `anox` format mounts packages like Anachronox does: its data packages (`BATTLE.dat`, `MODELS.dat`, `TEXTURES.dat` and so on) are mounted at their lowercase name, the zip files `anox0.zip` to `anox9.zip` are mounted at the root and take precedence over the data packages, and loose files take precedence over all packages.
 
 #### Material Configurations
 
@@ -3302,6 +3306,8 @@ The `root` key specifies the folder at which to search for the material packages
 In the case of Quake 2, the builtin game configuration specifies the search path of the file system as `"baseq2"` and the material package root as `"textures"`, so TrenchBroom will create a material collection for each folder found in `<Game Path>/baseq2/textures`.
 
 TrenchBroom supports a wide array of image formats such as tga, pcx, jpeg, and so on. TrenchBroom uses the [FreeImage Library] to load these images and supports any file type supported by this library.
+
+Anachronox animated and procedural textures (atd) are supported, but TrenchBroom shows them as a still image: the first frame of an animation, or the base image of a procedural texture.
 
 Optionally, you can specify a palette. The value of the `palette` key specifies a path, relative to the file system, where TrenchBroom will look for a palette file that comes with the game's assets.
 
@@ -3341,6 +3347,14 @@ Example                                   Description
 Of course, you could use the switch and case operators for more complicated cases.
 
 The optional `setDefaultProperties` key controls whether [default entity properties](#entity_properties_defaults) are instantiated automatically when TrenchBroom creates a new entity. Defaults to `false` if not set.
+
+The optional `gameDefinitions` key provides a list of entity definition files that TrenchBroom loads from the game file system and adds to the definitions loaded from the selected entity definition file. If an entity is defined in both, the definition from the selected file is used. Anachronox uses this to load the model entities from the game's `models/entity.dat` file.
+
+    "entities": {
+      "definitions": [ "Anachronox.fgd" ],
+      "gameDefinitions": [ "models/entity.dat" ],
+      "defaultcolor": "0.6 0.6 0.6 1.0"
+    },
 
 #### Tags {#game_configuration_files_tags}
 

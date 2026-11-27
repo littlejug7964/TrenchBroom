@@ -4,6 +4,7 @@ target_sources(TbMdlLib
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/AddRemoveNodesCommand.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/AddRemoveNodesUtils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/AnoxEntityDatParser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Autosaver.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/BasicShapes.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/BezierPatch.cpp
@@ -76,8 +77,10 @@ target_sources(TbMdlLib
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LinkedGroupUtils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LinkSourceValidator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LinkTargetValidator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadAnoxMd2Model.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadAseModel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadAssimpModel.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadAtdTexture.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadBspModel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadDdsTexture.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadDkmModel.cpp
@@ -91,6 +94,7 @@ target_sources(TbMdlLib
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadMaterialCollections.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadMd2Model.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadMd3Model.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadMdaModel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadMdlModel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadMdxModel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadMipTexture.cpp

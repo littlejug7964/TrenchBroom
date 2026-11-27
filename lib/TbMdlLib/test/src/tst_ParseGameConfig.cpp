@@ -1075,6 +1075,62 @@ TEST_CASE("GameConfigParser")
 
   SECTION("entities")
   {
+    SECTION("parseGameDefinitions")
+    {
+      const auto config = R"(
+{
+    "version": 9,
+    "name": "Anachronox",
+    "fileformats": [
+        { "format": "Quake2" }
+    ],
+    "filesystem": {
+        "searchpath": "anoxdata",
+        "packageformat": { "extensions": [ ".dat", ".zip" ], "format": "anox" }
+    },
+    "materials": {
+        "root": "textures",
+        "extensions": [ ".tga" ]
+    },
+    "entities": {
+        "definitions": [ "Anachronox.fgd" ],
+        "gameDefinitions": [ "models/entity.dat" ],
+        "defaultcolor": "0.6 0.6 0.6 1.0"
+    }
+}
+)";
+
+      CHECK(
+        parseGameConfig(config)
+        == mdl::GameConfig{
+          "Anachronox",
+          {},
+          {},
+          false,
+          {mdl::MapFormatConfig{"Quake2", {}}},
+          mdl::FileSystemConfig{
+            {"anoxdata"}, mdl::PackageFormatConfig{{".dat", ".zip"}, "anox"}},
+          mdl::MaterialConfig{
+            {"textures"},
+            {".tga"},
+            {},
+            std::nullopt,
+            {},
+            {},
+          },
+          mdl::EntityConfig{
+            {{"Anachronox.fgd"}},
+            RgbaF{0.6f, 0.6f, 0.6f, 1.0f},
+            {},
+            false,
+            {{"models/entity.dat"}}},
+          mdl::FaceAttribsConfig{},
+          {},
+          std::nullopt, // soft map bounds
+          {}            // compilation tools
+        });
+    }
+
     SECTION("parseSwitchDefaultScaleExpression")
     {
       const auto config = R"(

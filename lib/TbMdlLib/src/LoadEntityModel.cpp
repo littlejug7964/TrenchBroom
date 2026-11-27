@@ -23,6 +23,7 @@
 #include "fs/FileSystem.h"
 #include "gl/Resource.h"
 #include "mdl/EntityModel.h"
+#include "mdl/LoadAnoxMd2Model.h"
 #include "mdl/LoadAseModel.h"
 #include "mdl/LoadAssimpModel.h"
 #include "mdl/LoadBspModel.h"
@@ -31,6 +32,7 @@
 #include "mdl/LoadImageSpriteModel.h"
 #include "mdl/LoadMd2Model.h"
 #include "mdl/LoadMd3Model.h"
+#include "mdl/LoadMdaModel.h"
 #include "mdl/LoadMdlModel.h"
 #include "mdl/LoadMdxModel.h"
 #include "mdl/LoadSpriteModel.h"
@@ -53,6 +55,14 @@ Result<EntityModelData> loadEntityModelData(
   const LoadMaterialFunc& loadMaterial,
   Logger& logger)
 {
+  if (const auto mdaProfilePath = parseMdaProfilePath(path))
+  {
+    return fs.openFile(mdaProfilePath->path) | kdl::and_then([&](auto file) {
+             return loadMdaModel(
+               file->reader().buffer(), fs, logger, mdaProfilePath->tag);
+           });
+  }
+
   const auto modelName = path.filename().string();
   return fs.openFile(path) | kdl::and_then([&](auto file) -> Result<EntityModelData> {
            auto reader = file->reader().buffer();
@@ -64,6 +74,14 @@ Result<EntityModelData> loadEntityModelData(
            if (canLoadMd2Model(path, reader))
            {
              return loadMd2Model(modelName, reader, palette, fs, logger);
+           }
+           if (canLoadAnoxMd2Model(path, reader))
+           {
+             return loadAnoxMd2Model(path, reader, fs, logger);
+           }
+           if (canLoadMdaModel(path, reader))
+           {
+             return loadMdaModel(reader, fs, logger);
            }
            if (canLoadBspModel(path, reader))
            {

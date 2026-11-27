@@ -1,0 +1,33 @@
+//
+// Anachronox game definition file (.fgd)
+//
+// This file only defines the basic entities that Anachronox inherits from Quake 2. The
+// model entities (ob_*, char_* and so on) are loaded from the game's models/entity.dat
+// file, see the "gameDefinitions" key in GameConfig.cfg.
+//
+
+@baseclass = Targetname [ targetname(target_source) : "Name" ]
+@baseclass = Target [ target(target_destination) : "Target" ]
+
+@SolidClass = worldspawn : "World entity"
+[
+	sky(string) : "Environment map name"
+	message(string) : "Level name"
+]
+
+@PointClass color(255 0 0) size(-16 -16 -24, 16 16 32) = info_player_start : "Player start"
+[
+	targetname(string) : "Name"
+	angle(integer) : "Direction"
+]
+
+@PointClass base(Targetname, Target) color(0 255 0) size(-8 -8 -8, 8 8 8) = light : "Light"
+[
+	spawnflags(Flags) =
+	[
+		1 : "Start Off" : 0
+	]
+	light(integer) : "Brightness" : 300
+	_color(color1) : "Color" : "1.0 1.0 1.0"
+	style(integer) : "Style" : 0
+]

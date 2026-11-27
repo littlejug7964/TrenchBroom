@@ -20,6 +20,7 @@
 #include "mdl/GameFileSystem.h"
 
 #include "base/Logger.h"
+#include "fs/AnoxDatFileSystem.h"
 #include "fs/DiskFileSystem.h"
 #include "fs/DiskIO.h"
 #include "fs/DkPakFileSystem.h"
@@ -31,7 +32,9 @@
 #include "mdl/EnvironmentConfig.h"
 #include "mdl/GameConfig.h"
 
+#include "kd/path_utils.h"
 #include "kd/ranges/as_rvalue_view.h"
+#include "kd/ranges/contains.h"
 #include "kd/result_fold.h"
 #include "kd/string_compare.h"
 #include "kd/string_compare_natural.h"
@@ -41,6 +44,110 @@
 
 namespace tb::mdl
 {
+
+namespace
+{
+
+bool isAnachronoxPackageFormat(const std::string& packageFormat)
+{
+  return kdl::ci::str_is_equal(packageFormat, "anox");
+}
+
+bool isAnachronoxDataPackage(const std::filesystem::path& path)
+{
+  return kdl::path_has_extension(kdl::path_to_lower(path), ".dat");
+}
+
+/**
+ * Returns the format of the package at the given path.
+ *
+ * Anachronox's file system mounts both its own data packages (.dat) and zip files.
+ */
+std::string packageFormatForPath(
+  const std::string& packageFormat, const std::filesystem::path& path)
+{
+  if (isAnachronoxPackageFormat(packageFormat))
+  {
+    return isAnachronoxDataPackage(path) ? "anoxdat" : "zip";
+  }
+  return packageFormat;
+}
+
+/**
+ * Returns the path at which a package is mounted in the game file system.
+ *
+ * Anachronox maps each data package to the directory named after the package's
+ * lowercase file name stem, e.g., MODELS.dat is mounted at models/. All other packages
+ * are mounted at the root.
+ */
+std::filesystem::path packageMountPoint(
+  const std::string& packageFormat, const std::filesystem::path& path)
+{
+  if (kdl::ci::str_is_equal(packageFormat, "anoxdat"))
+  {
+    return kdl::path_to_lower(path.stem());
+  }
+  return {};
+}
+
+/**
+ * Returns whether Anachronox mounts the package at the given path.
+ *
+ * Anachronox only mounts the data packages it knows by name, and the zip files
+ * anox0.zip to anox9.zip.
+ */
+bool isAnachronoxPackage(const std::filesystem::path& path)
+{
+  static const auto dataPackageNames = std::vector<std::string>{
+    "battle",
+    "gameflow",
+    "graphics",
+    "maps",
+    "models",
+    "objects",
+    "particles",
+    "scripts",
+    "sound",
+    "sprites",
+    "textures",
+  };
+
+  return isAnachronoxDataPackage(path)
+           ? kdl::ranges::contains(
+               dataPackageNames, kdl::path_to_lower(path.stem()).string())
+           : kdl::ci::str_matches_glob(path.filename().string(), "anox%.zip");
+}
+
+/**
+ * Selects the packages to mount and sorts them into the order in which they are mounted.
+ * Packages that are mounted later take precedence over packages that are mounted
+ * earlier.
+ *
+ * Packages are mounted in natural order of their file names. For Anachronox, the data
+ * packages (.dat) are mounted first, so that the files in zip files, such as the
+ * unofficial patch's anox1.zip, take precedence over them.
+ */
+std::vector<std::filesystem::path> selectPackages(
+  const std::string& packageFormat, std::vector<std::filesystem::path> packagePaths)
+{
+  if (isAnachronoxPackageFormat(packageFormat))
+  {
+    std::erase_if(packagePaths, [](const auto& p) { return !isAnachronoxPackage(p); });
+  }
+
+  std::ranges::sort(packagePaths, kdl::ci::string_less_natural{}, [](const auto& p) {
+    return p.string();
+  });
+
+  if (isAnachronoxPackageFormat(packageFormat))
+  {
+    std::ranges::stable_partition(packagePaths, isAnachronoxDataPackage);
+  }
+
+  return packagePaths;
+}
+
+} // namespace
 
 void GameFileSystem::initialize(
   const EnvironmentConfig& environmentConfig,
@@ -114,8 +221,17 @@ void GameFileSystem::addSearchPath(
   Logger& logger)
 {
   const auto fixedPath = fs::Disk::fixPath(gamePath / searchPath);
-  addFileSystemPath(fixedPath, logger);
-  addFileSystemPackages(config, fixedPath, logger);
+  if (isAnachronoxPackageFormat(config.fileSystemConfig.packageFormat.format))
+  {
+    // Anachronox gives loose files precedence over files in packages
+    addFileSystemPackages(config, fixedPath, logger);
+    addFileSystemPath(fixedPath, logger);
+  }
+  else
+  {
+    addFileSystemPath(fixedPath, logger);
+    addFileSystemPackages(config, fixedPath, logger);
+  }
 }
 
 void GameFileSystem::addFileSystemPath(const std::filesystem::path& path, Logger& logger)
@@ -148,6 +264,13 @@ Result<std::unique_ptr<fs::FileSystem>> createImageFileSystem(
            })
            | kdl::transform(setMetadataAndCast);
   }
+  else if (kdl::ci::str_is_equal(packageFormat, "anoxdat"))
+  {
+    return fs::Disk::openFile(path) | kdl::and_then([&](auto file) {
+             return fs::createImageFileSystem<fs::AnoxDatFileSystem>(std::move(file));
+           })
+           | kdl::transform(setMetadataAndCast);
+  }
   else if (kdl::ci::str_is_equal(packageFormat, "zip"))
   {
     return fs::Disk::openFile(path) | kdl::and_then([&](auto file) {
@@ -175,18 +298,19 @@ void GameFileSystem::addFileSystemPackages(
       fs::TraversalMode::Flat,
       fs::makeExtensionPathMatcher(packageExtensions))
       | kdl::and_then([&](auto packagePaths) {
-          std::ranges::sort(
-            packagePaths, kdl::ci::string_less_natural{}, [](const auto& p) {
-              return p.string();
-            });
+          packagePaths = selectPackages(packageFormat, std::move(packagePaths));
           return packagePaths | kdl::views::as_rvalue
                  | std::views::transform([&](auto absPackagePath) {
-                     return createImageFileSystem(packageFormat, absPackagePath)
+                     const auto actualPackageFormat =
+                       packageFormatForPath(packageFormat, absPackagePath);
+                     return createImageFileSystem(actualPackageFormat, absPackagePath)
                             | kdl::transform([&](auto fs) {
+                                const auto mountPoint =
+                                  packageMountPoint(actualPackageFormat, absPackagePath);
                                 logger.info()
                                   << "Adding file system package "
                                   << absPackagePath.lexically_relative(searchPath);
-                                mount("", std::move(fs));
+                                mount(mountPoint, std::move(fs));
                               });
                    })
                  | kdl::fold;

@@ -19,6 +19,7 @@
 
 #include "Matchers.h"
 #include "TestEnvironment.h"
+#include "fs/AnoxDatFileSystem.h"
 #include "fs/DiskIO.h"
 #include "fs/DkPakFileSystem.h"
 #include "fs/FileSystemMetadata.h"
@@ -829,6 +830,7 @@ TEST_CASE("ImageFileSystem")
         {"IdPakFileSystem", openFS<IdPakFileSystem>(fsTestPath / "Pak/idpak.pak")},
         {"DkPakFileSystem", openFS<DkPakFileSystem>(fsTestPath / "Pak/dkpak.pak")},
         {"ZipFileSystem", openFS<ZipFileSystem>(fsTestPath / "Zip/zip.zip")},
+        {"AnoxDatFileSystem", openFS<AnoxDatFileSystem>(fsTestPath / "Dat/anoxdat.dat")},
       }));
 
     CAPTURE(name);

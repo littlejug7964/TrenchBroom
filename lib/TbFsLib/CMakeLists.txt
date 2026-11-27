@@ -2,6 +2,7 @@ add_library(TbFsLib STATIC)
 
 target_sources(TbFsLib
   PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/AnoxDatFileSystem.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/DiskFileSystem.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/DiskIO.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/DkPakFileSystem.cpp

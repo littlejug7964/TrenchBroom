@@ -21,6 +21,7 @@
 
 #include "fs/FileSystem.h"
 #include "gl/Texture.h"
+#include "mdl/LoadAtdTexture.h"
 #include "mdl/LoadDdsTexture.h"
 #include "mdl/LoadImageTexture.h"
 #include "mdl/LoadM32Texture.h"
@@ -90,6 +91,13 @@ Result<gl::Texture> loadTexture(
     return fs.openFile(path) | kdl::and_then([&](auto file) {
              auto reader = file->reader().buffer();
              return loadDdsTexture(reader);
+           });
+  }
+  else if (isAtdTexture(path))
+  {
+    // animated and procedural textures are shown as a still image
+    return findAtdImage(fs, path) | kdl::and_then([&](const auto& bitmapPath) {
+             return loadTexture(bitmapPath, name, fs, palette);
            });
   }
   else if (isImageTexture(path))

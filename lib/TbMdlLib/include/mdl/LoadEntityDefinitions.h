@@ -24,16 +24,40 @@
 #include "mdl/EntityDefinition.h"
 
 #include <filesystem>
+#include <vector>
 
 namespace tb
 {
 class ParserStatus;
+
+namespace fs
+{
+class FileSystem;
+}
 
 namespace mdl
 {
 
 Result<std::vector<EntityDefinition>> loadEntityDefinitions(
   const std::filesystem::path& path, const Color& defaultColor, ParserStatus& status);
+
+/**
+ * Loads entity definitions from the given file system. FGD files loaded this way cannot
+ * include other files.
+ */
+Result<std::vector<EntityDefinition>> loadEntityDefinitions(
+  const fs::FileSystem& fs,
+  const std::filesystem::path& path,
+  const Color& defaultColor,
+  ParserStatus& status);
+
+/**
+ * Adds the given additional entity definitions to the given entity definitions, skipping
+ * every additional definition whose name is already defined.
+ */
+void addEntityDefinitions(
+  std::vector<EntityDefinition>& entityDefinitions,
+  std::vector<EntityDefinition> additionalEntityDefinitions);
 
 } // namespace mdl
 } // namespace tb

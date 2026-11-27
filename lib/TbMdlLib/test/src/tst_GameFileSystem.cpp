@@ -18,6 +18,7 @@
  */
 
 #include "TestEnvironment.h"
+#include "TestLogger.h"
 #include "base/Logger.h"
 #include "fs/DiskFileSystem.h"
 #include "fs/PathInfo.h"
@@ -62,6 +63,26 @@ TEST_CASE("GameFileSystem")
       mod1_pak0_2.txt - contents: "mod1_pak0_2"
     pak1.PAK
       mod1_pak0_2.txt - contents: "mod1_pak1_2", overrides mod1/pak0.pak
+  anoxdata
+    loose_vs_zip.txt - contents: "loose", overrides anox1.zip
+    models
+      loose_override.txt - contents: "loose", overrides MODELS.dat
+    MODELS.dat - mounted at models/
+      boots\boots.md2 - contents: "models_dat"
+      dat_only.txt - contents: "models_dat"
+      zip_override.txt - contents: "models_dat"
+      loose_override.txt - contents: "models_dat"
+    TEXTURES.dat - mounted at textures/
+      e1\wall.txt - contents: "textures_dat"
+    anox1.zip
+      models/zip_override.txt - contents: "anox1", overrides MODELS.dat
+      zip_order.txt - contents: "anox1"
+      loose_vs_zip.txt - contents: "anox1"
+    anox2.zip
+      zip_order.txt - contents: "anox2", overrides anox1.zip
+    anox10.zip - not mounted by Anachronox
+      zip_order.txt - contents: "anox10"
+    notes.dat - not a data package, not mounted by Anachronox
   natural_order
     pak2.pak
       shared.txt - contents: "pak2"
@@ -179,6 +200,66 @@ TEST_CASE("GameFileSystem")
     CHECK(fs.pathInfo("id1_pak0_2.txt") == fs::PathInfo::File);
     CHECK(fs.pathInfo("id1_pak0_loose_file.txt") == fs::PathInfo::File);
     CHECK(fs.pathInfo("mod1_pak0_1.txt") == fs::PathInfo::Unknown);
+  }
+
+  SECTION("Anachronox file system")
+  {
+    const auto anoxConfig = GameConfig{
+      "Anachronox",
+      {},
+      {},
+      false,
+      {},
+      {
+        "anoxdata",
+        {
+          {".dat", ".zip"},
+          "anox",
+        },
+      },
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+    };
+
+    auto anoxLogger = TestLogger{};
+    fs.initialize(environmentConfig, anoxConfig, fixturePath, {}, anoxLogger);
+
+    SECTION("Mounts data packages at their lowercase name")
+    {
+      CHECK(fs.pathInfo("models") == fs::PathInfo::Directory);
+      CHECK(fs.pathInfo("models/boots/boots.md2") == fs::PathInfo::File);
+      CHECK(fs.pathInfo("textures/e1/wall.txt") == fs::PathInfo::File);
+      CHECK(fs::readTextFile(fs, "models/dat_only.txt") == "models_dat");
+      CHECK(fs::readTextFile(fs, "textures/e1/wall.txt") == "textures_dat");
+
+      CHECK(fs.pathInfo("dat_only.txt") == fs::PathInfo::Unknown);
+    }
+
+    SECTION("Zip files override data packages")
+    {
+      CHECK(fs::readTextFile(fs, "models/zip_override.txt") == "anox1");
+    }
+
+    SECTION("Mounts zip files anox0.zip to anox9.zip in order")
+    {
+      CHECK(fs::readTextFile(fs, "zip_order.txt") == "anox2");
+    }
+
+    SECTION("Ignores packages that Anachronox doesn't mount")
+    {
+      CHECK(fs.pathInfo("notes") == fs::PathInfo::Unknown);
+      CHECK(anoxLogger.countMessages(LogLevel::Error) == 0);
+    }
+
+    SECTION("Loose files override packages")
+    {
+      CHECK(fs::readTextFile(fs, "models/loose_override.txt") == "loose");
+      CHECK(fs::readTextFile(fs, "loose_vs_zip.txt") == "loose");
+    }
   }
 
   SECTION("concurrent reload/mount/unmount vs. reads")
