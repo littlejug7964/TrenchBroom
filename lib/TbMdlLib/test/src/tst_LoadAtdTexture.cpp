@@ -61,7 +61,20 @@ height = 64
   bitmap = 0
   next = 0
   wait = 0.5
-)") == Atd{{"textures/anim/a.tga", "textures/anim/b.tga"}, {1, 0}});
+)") == Atd{"animation", {"textures/anim/a.tga", "textures/anim/b.tga"}, {1, 0}, {}});
+    }
+
+    SECTION("parses an interform texture")
+    {
+      CHECK(parseAtd(R"(ATD1
+type        = Interform
+width       = 64
+height      = 64
+mother      = textures/anim/mother.png
+mother_move = scroll
+father      = textures/anim/father.png
+palette     = textures/anim/palette.png
+)") == Atd{"interform", {}, {}, "textures/anim/mother.png"});
     }
 
     SECTION("returns an error if the header is missing")
@@ -97,8 +110,21 @@ height = 64
       CHECK(texture.height() == 4u);
 
       CHECK(
-        findAtdFirstFrameBitmap(fs, "textures/anim/glow.atd")
+        findAtdImage(fs, "textures/anim/glow.atd")
         == Result<std::filesystem::path>{"textures/anim/glow2.tga"});
+    }
+
+    SECTION("loads the mother image of an interform texture")
+    {
+      const auto texture =
+        loadTexture("textures/anim/form.atd", "anim/form", fs) | kdl::value();
+      CHECK(texture.width() == 4u);
+      CHECK(texture.height() == 2u);
+    }
+
+    SECTION("returns an error if there is no image")
+    {
+      CHECK(loadTexture("textures/anim/noise.atd", "anim/noise", fs).is_error());
     }
 
     SECTION("returns an error if the bitmap is missing")

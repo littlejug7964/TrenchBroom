@@ -95,8 +95,8 @@ Result<gl::Texture> loadTexture(
   }
   else if (isAtdTexture(path))
   {
-    // only the first frame of an animated texture is shown
-    return findAtdFirstFrameBitmap(fs, path) | kdl::and_then([&](const auto& bitmapPath) {
+    // animated and procedural textures are shown as a still image
+    return findAtdImage(fs, path) | kdl::and_then([&](const auto& bitmapPath) {
              return loadTexture(bitmapPath, name, fs, palette);
            });
   }

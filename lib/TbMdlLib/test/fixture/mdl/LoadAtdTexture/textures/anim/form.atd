@@ -1,0 +1,8 @@
+ATD1
+type        = interform
+width       = 4
+height      = 2
+mother      = textures/anim/glow1.tga
+mother_move = scroll
+father      = textures/anim/glow2.tga
+palette     = textures/anim/glow2.tga

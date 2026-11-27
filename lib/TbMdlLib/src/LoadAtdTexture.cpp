@@ -27,6 +27,7 @@
 #include "kd/reflection_impl.h"
 #include "kd/result.h"
 #include "kd/string_compare.h"
+#include "kd/string_format.h"
 #include "kd/string_utils.h"
 
 #include <fmt/format.h>
@@ -77,6 +78,26 @@ std::vector<std::string_view> tokenize(const std::string_view str)
   return tokens;
 }
 
+/**
+ * Returns the image that represents the given ATD: the mother image of an interform
+ * texture, and the bitmap of the first frame of any other texture. Returns an empty path
+ * if there is no such image.
+ */
+std::filesystem::path getAtdImage(const Atd& atd)
+{
+  if (atd.type == "interform")
+  {
+    return atd.mother;
+  }
+
+  if (atd.bitmaps.empty())
+  {
+    return {};
+  }
+
+  return atd.bitmaps[!atd.frames.empty() ? atd.frames.front() : 0];
+}
+
 } // namespace
 
 bool isAtdTexture(const std::filesystem::path& path)
@@ -96,7 +117,15 @@ Result<Atd> parseAtd(const std::string_view str)
   auto atd = Atd{};
   for (size_t i = 0; i < tokens.size(); ++i)
   {
-    if (kdl::ci::str_is_equal(tokens[i], "!bitmap"))
+    if (kdl::ci::str_is_equal(tokens[i], "type") && i + 1 < tokens.size())
+    {
+      atd.type = kdl::str_to_lower(tokens[++i]);
+    }
+    else if (kdl::ci::str_is_equal(tokens[i], "mother") && i + 1 < tokens.size())
+    {
+      atd.mother = kdl::parse_path(std::string{tokens[++i]});
+    }
+    else if (kdl::ci::str_is_equal(tokens[i], "!bitmap"))
     {
       // !bitmap file=<path>
       if (
@@ -133,20 +162,19 @@ Result<Atd> parseAtd(const std::string_view str)
   return atd;
 }
 
-Result<std::filesystem::path> findAtdFirstFrameBitmap(
+Result<std::filesystem::path> findAtdImage(
   const fs::FileSystem& fs, const std::filesystem::path& path)
 {
   return fs.openFile(path) | kdl::and_then([](const auto& file) {
            return parseAtd(file->reader().buffer().stringView());
          })
          | kdl::and_then([&](const auto& atd) -> Result<std::filesystem::path> {
-             if (atd.bitmaps.empty())
+             const auto bitmap = getAtdImage(atd);
+             if (bitmap.empty())
              {
-               return Error{fmt::format("ATD '{}' has no bitmaps", path)};
+               return Error{fmt::format("ATD '{}' has no image", path)};
              }
 
-             const auto& bitmap =
-               atd.bitmaps[!atd.frames.empty() ? atd.frames.front() : 0];
              if (isAtdTexture(bitmap))
              {
                return Error{fmt::format("ATD '{}' refers to another ATD", path)};

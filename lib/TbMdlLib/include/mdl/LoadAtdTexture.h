@@ -24,6 +24,7 @@
 #include "kd/reflection_decl.h"
 
 #include <filesystem>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -40,17 +41,24 @@ namespace mdl
 /**
  * An Anachronox animated texture description (ATD).
  *
- * An ATD lists bitmaps and the frames of the animation, each of which shows one of the
- * bitmaps.
+ * An animation (type animation) lists bitmaps and the frames of the animation, each of
+ * which shows one of the bitmaps. A procedural texture (type interform) combines two
+ * moving images, the mother and the father, and colors them using a palette.
  */
 struct Atd
 {
+  /** The texture type in lowercase, e.g., animation or interform. */
+  std::string type;
+
   std::vector<std::filesystem::path> bitmaps;
 
   /** For each frame, the index of the bitmap it shows. */
   std::vector<size_t> frames;
 
-  kdl_reflect_decl(Atd, bitmaps, frames);
+  /** The mother image of an interform texture. */
+  std::filesystem::path mother;
+
+  kdl_reflect_decl(Atd, type, bitmaps, frames, mother);
 };
 
 bool isAtdTexture(const std::filesystem::path& path);
@@ -58,12 +66,13 @@ bool isAtdTexture(const std::filesystem::path& path);
 Result<Atd> parseAtd(std::string_view str);
 
 /**
- * Returns the path of the bitmap shown by the first frame of the ATD at the given path.
+ * Returns the path of the image that represents the ATD at the given path: the bitmap
+ * shown by the first frame of an animation, or the mother image of an interform texture.
  *
- * Bitmap paths are relative to the game file system. If a bitmap is not found there, it
+ * Image paths are relative to the game file system. If an image is not found there, it
  * is looked up relative to the ATD's directory.
  */
-Result<std::filesystem::path> findAtdFirstFrameBitmap(
+Result<std::filesystem::path> findAtdImage(
   const fs::FileSystem& fs, const std::filesystem::path& path);
 
 } // namespace mdl
