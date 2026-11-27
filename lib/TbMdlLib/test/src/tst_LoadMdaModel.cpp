@@ -160,7 +160,7 @@ profile { skin { pass { map "models\test\skin_a" } } }
       const auto modelData =
         loadMdaModel(file->reader().buffer(), fs, logger) | kdl::value();
 
-      CHECK(modelData.frameCount() == 2u);
+      CHECK(modelData.frameCount() == 1u);
       REQUIRE(modelData.surfaceCount() == 2u);
 
       CHECK(modelData.surface(0).name() == "profile_a");

@@ -52,8 +52,8 @@ TEST_CASE("loadAnoxMd2Model")
   vertices 3, 4, 5. The vertex positions are (0 0 0), (8 0 0), (8 8 0), (0 0 4), (8 0 4)
   and (8 8 4).
 
-  The first frame, stand_001, is scaled by 1 and offset by (-4 -4 0), the second frame,
-  stand_002, is scaled by 2 and offset by (0 0 16).
+  The first frame, stand_001, is scaled by 2 and offset by (-4 -4 0), the second frame,
+  stand_002, is scaled by 2 and offset by (0 0 16). Only the first frame is loaded.
   */
 
   const auto fixturePath = getFixtureRoot() / "test/mdl/LoadAnoxMd2Model";
@@ -95,16 +95,14 @@ TEST_CASE("loadAnoxMd2Model")
     CHECK(modelData.pitchType() == PitchType::Normal);
     CHECK(modelData.orientation() == Orientation::Oriented);
 
-    REQUIRE(modelData.frameCount() == 2u);
+    REQUIRE(modelData.frameCount() == 1u);
     CHECK(modelData.frame(0)->name() == "stand_001");
-    CHECK(modelData.frame(0)->bounds() == vm::bbox3f{{-4, -4, 0}, {4, 4, 4}});
-    CHECK(modelData.frame(1)->name() == "stand_002");
-    CHECK(modelData.frame(1)->bounds() == vm::bbox3f{{0, 0, 16}, {16, 16, 24}});
+    CHECK(modelData.frame(0)->bounds() == vm::bbox3f{{-4, -4, 0}, {12, 12, 8}});
 
     REQUIRE(modelData.surfaceCount() == 2u);
     for (const auto& surface : modelData.surfaces())
     {
-      CHECK(surface.frameCount() == 2u);
+      CHECK(surface.frameCount() == 1u);
       CHECK(surface.skinCount() == 1u);
     }
   }

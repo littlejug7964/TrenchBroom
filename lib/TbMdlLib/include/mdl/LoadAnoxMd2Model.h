@@ -48,7 +48,7 @@ bool canLoadAnoxMd2Model(const std::filesystem::path& path, fs::Reader reader);
  * Loads an Anachronox MD2 model.
  *
  * Every skin of an Anachronox MD2 model is applied to its own set of primitives, so the
- * model is loaded with one surface per skin.
+ * model is loaded with one surface per skin. Only the first frame of the model is loaded.
  *
  * Skins are looked up relative to the game file system and in the model's directory.
  *

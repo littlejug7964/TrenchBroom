@@ -37,6 +37,7 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <numeric>
 #include <optional>
 #include <ranges>
@@ -411,6 +412,10 @@ Result<EntityModelData> loadAnoxMd2Model(
     const auto commandCount = reader.readSize<int32_t>();
     const auto frameCount = reader.readSize<int32_t>();
 
+    // Character models have up to about 1,100 frames, and loading all of them takes a
+    // lot of time and memory, so only the first frame is loaded
+    const auto loadedFrameCount = std::min(frameCount, size_t(1));
+
     const auto skinOffset = reader.readSize<int32_t>();
     /* const auto uvCoordOffset = */ reader.readSize<int32_t>();
     /* const auto triangleOffset = */ reader.readSize<int32_t>();
@@ -440,7 +445,7 @@ Result<EntityModelData> loadAnoxMd2Model(
                  auto& surface = data.addSurface(
                    !skinPath.empty() ? skinPath.stem().string()
                                      : path.filename().string(),
-                   frameCount);
+                   loadedFrameCount);
                  if (!skinPath.empty())
                  {
                    auto materials = std::vector<gl::Material>{};
@@ -456,7 +461,7 @@ Result<EntityModelData> loadAnoxMd2Model(
                         : resolution == Resolution::Medium ? 6u
                                                            : 8u);
 
-               for (size_t i = 0; i < frameCount; ++i)
+               for (size_t i = 0; i < loadedFrameCount; ++i)
                {
                  const auto frame = parseFrame(
                    reader.subReaderFromBegin(frameOffset + i * frameSize, frameDataSize),
