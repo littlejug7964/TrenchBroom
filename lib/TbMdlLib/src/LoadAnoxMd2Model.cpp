@@ -58,9 +58,13 @@ constexpr size_t FrameHeaderLength = 6 * sizeof(float) + FrameNameLength;
 
 /**
  * The extensions to try if a skin cannot be found by its own name. Skins are often
- * referred to with an extension that differs from the actual file's extension.
+ * referred to with an extension that differs from the actual file's extension. Images
+ * are preferred over animated and procedural textures (ATD).
  */
-const auto SkinExtensions = std::vector<std::filesystem::path>{".tga", ".png", ".bmp"};
+const auto SkinExtensions = std::vector<std::vector<std::filesystem::path>>{
+  {".tga", ".png", ".bmp"},
+  {".atd"},
+};
 
 /**
  * The resolution determines how the vertex positions of a frame are stored. Every vertex
@@ -260,8 +264,8 @@ std::vector<std::filesystem::path> parseSkins(fs::Reader reader, const size_t co
  * Finds the file of the given skin.
  *
  * Most skins are referred to by their file name only and are found next to the model.
- * Many models refer to their skins as BMP files, but the skins are actually TGA or PNG
- * files, so the skin is also looked up with other image extensions.
+ * Many models refer to their skins as BMP files, but the skins are actually TGA, PNG or
+ * ATD files, so the skin is also looked up with other extensions.
  */
 std::filesystem::path findSkinFile(
   const std::filesystem::path& skinPath,
@@ -275,12 +279,15 @@ std::filesystem::path findSkinFile(
   }
   candidates.push_back(modelPath.parent_path() / skinPath.filename());
 
-  for (const auto& candidate : candidates)
+  for (const auto& extensions : SkinExtensions)
   {
-    if (auto skinFile = findMaterialFile(fs, candidate, SkinExtensions);
-        skinFile.is_success())
+    for (const auto& candidate : candidates)
     {
-      return std::move(skinFile).value();
+      if (auto skinFile = findMaterialFile(fs, candidate, extensions);
+          skinFile.is_success())
+      {
+        return std::move(skinFile).value();
+      }
     }
   }
 

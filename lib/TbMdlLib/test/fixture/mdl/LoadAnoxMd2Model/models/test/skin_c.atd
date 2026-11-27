@@ -1,0 +1,4 @@
+ATD1
+type = animation
+!bitmap file = models/test/profile_a.tga
+!frame bitmap = 0

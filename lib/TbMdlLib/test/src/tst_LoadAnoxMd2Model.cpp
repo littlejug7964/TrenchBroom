@@ -144,6 +144,22 @@ TEST_CASE("loadAnoxMd2Model")
     CHECK(logger.countMessages(LogLevel::Error) == 0);
   }
 
+  SECTION("finds skins that are ATD textures")
+  {
+    // atd_skins.md2 refers to its skins as skin_c.bmp and skin_a.bmp. skin_c only exists
+    // as an ATD, which shows profile_a.tga. skin_a exists as an image and as an ATD, so
+    // the image is used.
+    const auto file = openModel("atd_skins.md2");
+    const auto modelData =
+      loadAnoxMd2Model("models/test/atd_skins.md2", file->reader().buffer(), fs, logger)
+      | kdl::value();
+
+    REQUIRE(modelData.surfaceCount() == 2u);
+    CHECK(modelData.surface(0).skin(0u)->texture()->width() == 4u);
+    CHECK(modelData.surface(1).skin(0u)->texture()->width() == 16u);
+    CHECK(logger.countMessages(LogLevel::Error) == 0);
+  }
+
   SECTION("replaces skins")
   {
     const auto file = openModel("res2.md2");
