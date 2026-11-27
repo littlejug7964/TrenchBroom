@@ -77,6 +77,7 @@ target_sources(TbMdlLib
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LinkedGroupUtils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LinkSourceValidator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LinkTargetValidator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadAnoxMd2Model.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadAseModel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadAssimpModel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadBspModel.cpp

@@ -33,7 +33,7 @@ TrenchBroom is a level editing program for brush-based game engines such as Quak
   - Support for FGD, ENT and DEF files for entity definitions, and Anachronox entity lists
   - Mod support
   - Entity link visualization
-  - Displays 3D models in the editor (supports mdl, md2, md3, bsp, dkm)
+  - Displays 3D models in the editor (supports mdl, md2, md3, bsp, dkm, Anachronox md2)
   - Smart entity property editors
 
 ## About this Document

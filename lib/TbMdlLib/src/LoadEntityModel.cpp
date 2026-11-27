@@ -23,6 +23,7 @@
 #include "fs/FileSystem.h"
 #include "gl/Resource.h"
 #include "mdl/EntityModel.h"
+#include "mdl/LoadAnoxMd2Model.h"
 #include "mdl/LoadAseModel.h"
 #include "mdl/LoadAssimpModel.h"
 #include "mdl/LoadBspModel.h"
@@ -64,6 +65,10 @@ Result<EntityModelData> loadEntityModelData(
            if (canLoadMd2Model(path, reader))
            {
              return loadMd2Model(modelName, reader, palette, fs, logger);
+           }
+           if (canLoadAnoxMd2Model(path, reader))
+           {
+             return loadAnoxMd2Model(modelName, reader, fs, logger);
            }
            if (canLoadBspModel(path, reader))
            {
