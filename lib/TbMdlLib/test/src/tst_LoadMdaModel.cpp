@@ -111,10 +111,14 @@ $ANIP:14:14:12345678
 
   SECTION("parses backslashes in paths")
   {
-    CHECK(parseMda(R"(MDA1
+    // MSVC mangles raw strings that contain backslashes in macro arguments
+    const auto file = R"(MDA1
 basemodel models\test\model.md2
 profile { skin { pass { map "models\test\skin_a" } } }
-)") == Mda{"models/test/model.md2", {{"", {"models/test/skin_a.tga"}}}});
+)";
+
+    CHECK(
+      parseMda(file) == Mda{"models/test/model.md2", {{"", {"models/test/skin_a.tga"}}}});
   }
 
   SECTION("parseMdaProfilePath")
