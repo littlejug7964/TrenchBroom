@@ -3283,7 +3283,11 @@ Format       Description
 ------       -----------
 idpak        Id pak file
 dkpak        Daikatana pak file
+anoxdat      Anachronox data package (.dat), mounted at its lowercase name, e.g. `MODELS.dat` at `models`
+anox         Anachronox's file system, see below
 zip          Zip file, often uses other extensions such as pk3
+
+Usually, packages take precedence over loose files, and packages that come later in natural order take precedence over packages that come earlier. The `anox` format mounts packages like Anachronox does: data packages (`.dat`) are mounted at their lowercase name, other packages (`.zip`) are mounted at the root and take precedence over the data packages, and loose files take precedence over all packages.
 
 #### Material Configurations
 
