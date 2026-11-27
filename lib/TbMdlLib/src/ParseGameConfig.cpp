@@ -427,11 +427,17 @@ EntityConfig parseEntityConfig(
                        })
                      | kdl::value();
 
+  auto gamePaths =
+    value.atOrDefault("gameDefinitions").asStringList()
+    | std::views::transform([&](const auto& str) { return std::filesystem::path{str}; })
+    | kdl::ranges::to<std::vector>();
+
   return EntityConfig{
     std::move(paths),
     color,
     std::move(scaleExpression),
     value.atOrDefault("setDefaultProperties").booleanValue(),
+    std::move(gamePaths),
   };
 }
 

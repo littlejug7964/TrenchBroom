@@ -21,6 +21,7 @@
 
 #include "fs/DiskIO.h"
 #include "fs/File.h"
+#include "fs/FileSystem.h"
 #include "mdl/AnoxEntityDatParser.h"
 #include "mdl/DefParser.h"
 #include "mdl/EntParser.h"
@@ -32,6 +33,7 @@
 #include <fmt/format.h>
 #include <fmt/std.h>
 
+#include <algorithm>
 #include <optional>
 
 namespace tb::mdl
@@ -90,6 +92,32 @@ Result<std::vector<EntityDefinition>> loadEntityDefinitions(
   return fs::Disk::openFile(path) | kdl::and_then([&](auto file) {
            return parseEntityDefinitions(*file, path, path, defaultColor, status);
          });
+}
+
+Result<std::vector<EntityDefinition>> loadEntityDefinitions(
+  const fs::FileSystem& fs,
+  const std::filesystem::path& path,
+  const Color& defaultColor,
+  ParserStatus& status)
+{
+  return fs.openFile(path) | kdl::and_then([&](auto file) {
+           return parseEntityDefinitions(*file, path, std::nullopt, defaultColor, status);
+         });
+}
+
+void addEntityDefinitions(
+  std::vector<EntityDefinition>& entityDefinitions,
+  std::vector<EntityDefinition> additionalEntityDefinitions)
+{
+  for (auto& entityDefinition : additionalEntityDefinitions)
+  {
+    if (std::ranges::none_of(entityDefinitions, [&](const auto& existingDefinition) {
+          return existingDefinition.name == entityDefinition.name;
+        }))
+    {
+      entityDefinitions.push_back(std::move(entityDefinition));
+    }
+  }
 }
 
 } // namespace tb::mdl

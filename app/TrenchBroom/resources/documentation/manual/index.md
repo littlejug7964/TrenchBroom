@@ -3346,6 +3346,14 @@ Of course, you could use the switch and case operators for more complicated case
 
 The optional `setDefaultProperties` key controls whether [default entity properties](#entity_properties_defaults) are instantiated automatically when TrenchBroom creates a new entity. Defaults to `false` if not set.
 
+The optional `gameDefinitions` key provides a list of entity definition files that TrenchBroom loads from the game file system and adds to the definitions loaded from the selected entity definition file. If an entity is defined in both, the definition from the selected file is used. Anachronox uses this to load the model entities from the game's `models/entity.dat` file.
+
+    "entities": {
+      "definitions": [ "Anachronox.fgd" ],
+      "gameDefinitions": [ "models/entity.dat" ],
+      "defaultcolor": "0.6 0.6 0.6 1.0"
+    },
+
 #### Tags {#game_configuration_files_tags}
 
 TrenchBroom can recognize certain special brush or face types. An example would be clip faces or trigger brushes. But since the details can be game dependent, these special types are defined in the game configuration. For greater flexibility and future enhancements, a general "smart tags" system is used to realize this functionality.

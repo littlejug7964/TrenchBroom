@@ -83,8 +83,19 @@ struct EntityConfig
   std::optional<el::ExpressionNode> scaleExpression;
   bool setDefaultProperties = false;
 
+  /**
+   * Entity definition files that are loaded from the game file system and added to the
+   * definitions loaded from the selected entity definition file.
+   */
+  std::vector<std::filesystem::path> gameDefFilePaths = {};
+
   kdl_reflect_decl(
-    EntityConfig, defFilePaths, defaultColor, scaleExpression, setDefaultProperties);
+    EntityConfig,
+    defFilePaths,
+    defaultColor,
+    scaleExpression,
+    setDefaultProperties,
+    gameDefFilePaths);
 };
 
 struct FlagConfig

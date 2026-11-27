@@ -631,6 +631,47 @@ TEST_CASE("Map_Assets")
     CHECK(map.entityDefinitionManager().definition("info_player_start") != nullptr);
   }
 
+  SECTION("adds entity definitions from the game file system")
+  {
+    auto env = fs::TestEnvironment{};
+    env.createFile("Test.fgd", R"(
+@SolidClass = worldspawn : "World entity" []
+@PointClass size(-1 -1 -1, 1 1 1) = ob_box : "Box from FGD" []
+)");
+    env.createDirectory("models");
+    env.createFile(
+      "models/entity.dat",
+      R"(ob_box|models/box.md2|1|1|1|general|-8|-8|-8|8|8|8|noshadow|1|0|0|0|0|0|0:0|0|0|none|Box from DAT
+ob_eye|models/eye.md2|1|1|1|general|-16|-16|0|16|16|64|noshadow|1|0|0|0|0|0|0:0|0|0|none|Eye from DAT)");
+
+    auto gameConfig = DefaultGameInfo.gameConfig;
+    gameConfig.entityConfig.gameDefFilePaths = {
+      "models/entity.dat",
+      "models/does_not_exist.dat",
+    };
+
+    auto fixtureConfig = MapFixtureConfig{};
+    fixtureConfig.gameInfo = detail::makeGameInfoFixture(gameConfig, env.dir());
+
+    auto& map = fixture.create(fixtureConfig);
+    setEntityDefinitionFile(
+      map, EntityDefinitionFileSpec::makeExternal(env.dir() / "Test.fgd"));
+
+    CHECK(map.entityDefinitionManager().definition("worldspawn") != nullptr);
+
+    // the definition from the selected file takes precedence
+    const auto* boxDefinition = map.entityDefinitionManager().definition("ob_box");
+    REQUIRE(boxDefinition != nullptr);
+    CHECK(boxDefinition->description == "Box from FGD");
+
+    const auto* eyeDefinition = map.entityDefinitionManager().definition("ob_eye");
+    REQUIRE(eyeDefinition != nullptr);
+    CHECK(eyeDefinition->description == "Eye from DAT");
+    CHECK(
+      eyeDefinition->pointEntityDefinition->bounds
+      == vm::bbox3d{{-16, -16, 0}, {16, 16, 64}});
+  }
+
   SECTION("reloading assets waits for resources that are still loading")
   {
     using namespace std::chrono_literals;
