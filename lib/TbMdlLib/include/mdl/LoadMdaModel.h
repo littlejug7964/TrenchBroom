@@ -26,6 +26,7 @@
 #include "kd/reflection_decl.h"
 
 #include <filesystem>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -74,11 +75,33 @@ Result<Mda> parseMda(std::string_view str);
 bool canLoadMdaModel(const std::filesystem::path& path, fs::Reader reader);
 
 /**
- * Loads the base model of an Anachronox model description and applies the skins of its
- * default profile. Only Anachronox MD2 base models are supported.
+ * Anachronox selects a profile of a model description by appending its tag to the path,
+ * e.g. models/boots.mda!HURT.
+ */
+struct MdaProfilePath
+{
+  std::filesystem::path path;
+  std::string tag;
+
+  kdl_reflect_decl(MdaProfilePath, path, tag);
+};
+
+/**
+ * If the given path refers to a profile of a model description, returns the path of the
+ * model description and the profile's tag.
+ */
+std::optional<MdaProfilePath> parseMdaProfilePath(const std::filesystem::path& path);
+
+/**
+ * Loads the base model of an Anachronox model description and applies the skins of the
+ * profile with the given tag, or of the default profile if no tag is given. Only
+ * Anachronox MD2 base models are supported.
  */
 Result<EntityModelData> loadMdaModel(
-  fs::Reader reader, const fs::FileSystem& fs, Logger& logger);
+  fs::Reader reader,
+  const fs::FileSystem& fs,
+  Logger& logger,
+  std::string_view profileTag = {});
 
 } // namespace mdl
 } // namespace tb

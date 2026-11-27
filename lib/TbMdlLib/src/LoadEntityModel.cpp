@@ -55,6 +55,14 @@ Result<EntityModelData> loadEntityModelData(
   const LoadMaterialFunc& loadMaterial,
   Logger& logger)
 {
+  if (const auto mdaProfilePath = parseMdaProfilePath(path))
+  {
+    return fs.openFile(mdaProfilePath->path) | kdl::and_then([&](auto file) {
+             return loadMdaModel(
+               file->reader().buffer(), fs, logger, mdaProfilePath->tag);
+           });
+  }
+
   const auto modelName = path.filename().string();
   return fs.openFile(path) | kdl::and_then([&](auto file) -> Result<EntityModelData> {
            auto reader = file->reader().buffer();

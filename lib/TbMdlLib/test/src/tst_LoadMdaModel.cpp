@@ -32,6 +32,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <string_view>
 
 #include <catch2/catch_test_macros.hpp>
@@ -108,6 +109,27 @@ $ANIP:14:14:12345678
     }
   }
 
+  SECTION("parses backslashes in paths")
+  {
+    CHECK(parseMda(R"(MDA1
+basemodel models\test\model.md2
+profile { skin { pass { map "models\test\skin_a" } } }
+)") == Mda{"models/test/model.md2", {{"", {"models/test/skin_a.tga"}}}});
+  }
+
+  SECTION("parseMdaProfilePath")
+  {
+    CHECK(
+      parseMdaProfilePath("models/test/model.mda!HURT")
+      == MdaProfilePath{"models/test/model.mda", "HURT"});
+    CHECK(
+      parseMdaProfilePath("models/test/MODEL.MDA!dflt")
+      == MdaProfilePath{"models/test/MODEL.MDA", "dflt"});
+    CHECK(parseMdaProfilePath("models/test/model.mda") == std::nullopt);
+    CHECK(parseMdaProfilePath("models/test/model.md2!HURT") == std::nullopt);
+    CHECK(parseMdaProfilePath("models/te!st/model.mda") == std::nullopt);
+  }
+
   SECTION("canLoadMdaModel")
   {
     const auto canLoad = [](
@@ -145,6 +167,32 @@ $ANIP:14:14:12345678
       CHECK(modelData.surface(0).skin(0u)->texture()->width() == 4u);
       CHECK(modelData.surface(1).name() == "profile_b");
       CHECK(modelData.surface(1).skin(0u)->texture()->width() == 2u);
+    }
+
+    SECTION("applies the skins of the profile with the given tag")
+    {
+      const auto file =
+        fs::Disk::openFile(fixturePath / "models/test/model.mda") | kdl::value();
+      const auto modelData =
+        loadMdaModel(file->reader().buffer(), fs, logger, "red") | kdl::value();
+
+      REQUIRE(modelData.surfaceCount() == 2u);
+      CHECK(modelData.surface(0).name() == "skin_a");
+      CHECK(modelData.surface(0).skin(0u)->texture()->width() == 16u);
+
+      // the profile has no skin for the second surface, so the model's skin is used
+      CHECK(modelData.surface(1).name() == "skin_b");
+    }
+
+    SECTION("applies the skins of the default profile if the tag is unknown")
+    {
+      const auto file =
+        fs::Disk::openFile(fixturePath / "models/test/model.mda") | kdl::value();
+      const auto modelData =
+        loadMdaModel(file->reader().buffer(), fs, logger, "XXXX") | kdl::value();
+
+      REQUIRE(modelData.surfaceCount() == 2u);
+      CHECK(modelData.surface(0).name() == "profile_a");
     }
 
     SECTION("returns an error if the base model is missing")

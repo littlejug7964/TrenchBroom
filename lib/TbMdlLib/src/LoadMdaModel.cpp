@@ -23,6 +23,7 @@
 #include "fs/FileSystem.h"
 #include "mdl/LoadAnoxMd2Model.h"
 
+#include "kd/k.h"
 #include "kd/path_utils.h"
 #include "kd/reflection_impl.h"
 #include "kd/result.h"
@@ -42,6 +43,8 @@ namespace tb::mdl
 kdl_reflect_impl(MdaProfile);
 
 kdl_reflect_impl(Mda);
+
+kdl_reflect_impl(MdaProfilePath);
 
 namespace
 {
@@ -103,6 +106,14 @@ std::vector<MdaToken> tokenize(const std::string_view str)
   return tokens;
 }
 
+/**
+ * Paths in MDA files may use backslashes as separators.
+ */
+std::filesystem::path parsePath(const std::string_view str)
+{
+  return kdl::parse_utf8_or_latin1_path(std::string{str}, K(convert_separators));
+}
+
 class MdaParser
 {
 private:
@@ -129,7 +140,7 @@ public:
       const auto token = next();
       if (kdl::ci::str_is_equal(token.value, "basemodel") && !eof())
       {
-        mda.baseModel = kdl::parse_path(std::string{next().value});
+        mda.baseModel = parsePath(next().value);
       }
       else if (kdl::ci::str_is_equal(token.value, "profile"))
       {
@@ -284,7 +295,7 @@ private:
       const auto token = next();
       if (kdl::ci::str_is_equal(token.value, "map") && !eof())
       {
-        map = kdl::parse_path(std::string{next().value});
+        map = parsePath(next().value);
 
         // the game assumes a TGA image if the texture has no extension
         if (!map.has_extension())
@@ -302,14 +313,36 @@ private:
   }
 };
 
-const MdaProfile* defaultProfile(const Mda& mda)
+/**
+ * Returns the profile with the given tag. If no tag is given or there is no profile with
+ * that tag, returns the default profile, which is either untagged or tagged DFLT, or the
+ * first profile if there is no default profile.
+ */
+const MdaProfile* selectProfile(const Mda& mda, const std::string_view tag)
 {
-  const auto it = std::ranges::find_if(mda.profiles, [](const auto& profile) {
-    return profile.tag.empty() || kdl::ci::str_is_equal(profile.tag, "DFLT");
-  });
-  return it != mda.profiles.end() ? &*it
-         : !mda.profiles.empty()  ? &mda.profiles.front()
-                                  : nullptr;
+  const auto findProfile = [&](const auto& predicate) -> const MdaProfile* {
+    const auto it = std::ranges::find_if(mda.profiles, predicate);
+    return it != mda.profiles.end() ? &*it : nullptr;
+  };
+
+  if (!tag.empty())
+  {
+    if (const auto* profile = findProfile([&](const auto& p) {
+          return kdl::ci::str_is_equal(p.tag, tag);
+        }))
+    {
+      return profile;
+    }
+  }
+
+  if (const auto* profile = findProfile([](const auto& p) {
+        return p.tag.empty() || kdl::ci::str_is_equal(p.tag, "DFLT");
+      }))
+  {
+    return profile;
+  }
+
+  return !mda.profiles.empty() ? &mda.profiles.front() : nullptr;
 }
 
 } // namespace
@@ -330,11 +363,32 @@ bool canLoadMdaModel(const std::filesystem::path& path, fs::Reader reader)
          && reader.readString(MdaMagic.size()) == MdaMagic;
 }
 
+std::optional<MdaProfilePath> parseMdaProfilePath(const std::filesystem::path& path)
+{
+  const auto filename = path.filename().string();
+  const auto separator = filename.rfind('!');
+  if (separator == std::string::npos)
+  {
+    return std::nullopt;
+  }
+
+  const auto mdaFilename = std::filesystem::path{filename.substr(0, separator)};
+  if (!kdl::path_has_extension(kdl::path_to_lower(mdaFilename), ".mda"))
+  {
+    return std::nullopt;
+  }
+
+  return MdaProfilePath{path.parent_path() / mdaFilename, filename.substr(separator + 1)};
+}
+
 Result<EntityModelData> loadMdaModel(
-  fs::Reader reader, const fs::FileSystem& fs, Logger& logger)
+  fs::Reader reader,
+  const fs::FileSystem& fs,
+  Logger& logger,
+  const std::string_view profileTag)
 {
   return parseMda(reader.buffer().stringView()) | kdl::and_then([&](const auto& mda) {
-           const auto* profile = defaultProfile(mda);
+           const auto* profile = selectProfile(mda, profileTag);
            const auto skins =
              profile ? profile->skins : std::vector<std::filesystem::path>{};
 
