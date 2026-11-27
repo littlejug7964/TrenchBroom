@@ -21,7 +21,7 @@
 
 #include "fs/File.h"
 #include "fs/FileSystem.h"
-#include "fs/PathInfo.h"
+#include "mdl/MaterialUtils.h"
 
 #include "kd/path_utils.h"
 #include "kd/reflection_impl.h"
@@ -46,6 +46,12 @@ namespace
 {
 
 constexpr auto AtdMagic = std::string_view{"ATD1"};
+
+/**
+ * The extensions to try if an image cannot be found by its own name. Some images are
+ * referred to without an extension.
+ */
+const auto ImageExtensions = std::vector<std::filesystem::path>{".tga", ".png", ".bmp"};
 
 /**
  * Splits an ATD file into tokens. Tokens are separated by whitespace and by '='. A token
@@ -180,15 +186,13 @@ Result<std::filesystem::path> findAtdImage(
                return Error{fmt::format("ATD '{}' refers to another ATD", path)};
              }
 
-             if (fs.pathInfo(bitmap) == fs::PathInfo::File)
+             for (const auto& candidate : {bitmap, path.parent_path() / bitmap})
              {
-               return bitmap;
-             }
-
-             const auto relativeBitmap = path.parent_path() / bitmap;
-             if (fs.pathInfo(relativeBitmap) == fs::PathInfo::File)
-             {
-               return relativeBitmap;
+               if (auto bitmapFile = findMaterialFile(fs, candidate, ImageExtensions);
+                   bitmapFile.is_success())
+               {
+                 return std::move(bitmapFile).value();
+               }
              }
 
              return Error{fmt::format("Could not find bitmap '{}'", bitmap)};

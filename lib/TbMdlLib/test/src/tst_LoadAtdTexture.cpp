@@ -114,6 +114,14 @@ palette     = textures/anim/palette.png
         == Result<std::filesystem::path>{"textures/anim/glow2.tga"});
     }
 
+    SECTION("finds bitmaps without an extension")
+    {
+      // noext.atd refers to its bitmap as textures/anim/glow1
+      const auto texture =
+        loadTexture("textures/anim/noext.atd", "anim/noext", fs) | kdl::value();
+      CHECK(texture.width() == 4u);
+    }
+
     SECTION("loads the mother image of an interform texture")
     {
       const auto texture =

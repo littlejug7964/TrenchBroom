@@ -1,0 +1,6 @@
+ATD1
+type = animation
+!bitmap
+  file = textures/anim/glow1
+!frame
+  bitmap = 0
