@@ -34,6 +34,7 @@
 
 #include "kd/path_utils.h"
 #include "kd/ranges/as_rvalue_view.h"
+#include "kd/ranges/contains.h"
 #include "kd/result_fold.h"
 #include "kd/string_compare.h"
 #include "kd/string_compare_natural.h"
@@ -90,16 +91,50 @@ std::filesystem::path packageMountPoint(
 }
 
 /**
- * Sorts the given packages into the order in which they are mounted. Packages that are
- * mounted later take precedence over packages that are mounted earlier.
+ * Returns whether Anachronox mounts the package at the given path.
+ *
+ * Anachronox only mounts the data packages it knows by name, and the zip files
+ * anox0.zip to anox9.zip.
+ */
+bool isAnachronoxPackage(const std::filesystem::path& path)
+{
+  static const auto dataPackageNames = std::vector<std::string>{
+    "battle",
+    "gameflow",
+    "graphics",
+    "maps",
+    "models",
+    "objects",
+    "particles",
+    "scripts",
+    "sound",
+    "sprites",
+    "textures",
+  };
+
+  return isAnachronoxDataPackage(path)
+           ? kdl::ranges::contains(
+               dataPackageNames, kdl::path_to_lower(path.stem()).string())
+           : kdl::ci::str_matches_glob(path.filename().string(), "anox%.zip");
+}
+
+/**
+ * Selects the packages to mount and sorts them into the order in which they are mounted.
+ * Packages that are mounted later take precedence over packages that are mounted
+ * earlier.
  *
  * Packages are mounted in natural order of their file names. For Anachronox, the data
  * packages (.dat) are mounted first, so that the files in zip files, such as the
  * unofficial patch's anox1.zip, take precedence over them.
  */
-void sortPackages(
-  const std::string& packageFormat, std::vector<std::filesystem::path>& packagePaths)
+std::vector<std::filesystem::path> selectPackages(
+  const std::string& packageFormat, std::vector<std::filesystem::path> packagePaths)
 {
+  if (isAnachronoxPackageFormat(packageFormat))
+  {
+    std::erase_if(packagePaths, [](const auto& p) { return !isAnachronoxPackage(p); });
+  }
+
   std::ranges::sort(packagePaths, kdl::ci::string_less_natural{}, [](const auto& p) {
     return p.string();
   });
@@ -108,6 +143,8 @@ void sortPackages(
   {
     std::ranges::stable_partition(packagePaths, isAnachronoxDataPackage);
   }
+
+  return packagePaths;
 }
 
 } // namespace
@@ -261,7 +298,7 @@ void GameFileSystem::addFileSystemPackages(
       fs::TraversalMode::Flat,
       fs::makeExtensionPathMatcher(packageExtensions))
       | kdl::and_then([&](auto packagePaths) {
-          sortPackages(packageFormat, packagePaths);
+          packagePaths = selectPackages(packageFormat, std::move(packagePaths));
           return packagePaths | kdl::views::as_rvalue
                  | std::views::transform([&](auto absPackagePath) {
                      const auto actualPackageFormat =

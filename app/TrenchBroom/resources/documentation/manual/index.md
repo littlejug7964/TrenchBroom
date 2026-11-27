@@ -3287,7 +3287,7 @@ anoxdat      Anachronox data package (.dat), mounted at its lowercase name, e.g.
 anox         Anachronox's file system, see below
 zip          Zip file, often uses other extensions such as pk3
 
-Usually, packages take precedence over loose files, and packages that come later in natural order take precedence over packages that come earlier. The `anox` format mounts packages like Anachronox does: data packages (`.dat`) are mounted at their lowercase name, other packages (`.zip`) are mounted at the root and take precedence over the data packages, and loose files take precedence over all packages.
+Usually, packages take precedence over loose files, and packages that come later in natural order take precedence over packages that come earlier. The `anox` format mounts packages like Anachronox does: its data packages (`BATTLE.dat`, `MODELS.dat`, `TEXTURES.dat` and so on) are mounted at their lowercase name, the zip files `anox0.zip` to `anox9.zip` are mounted at the root and take precedence over the data packages, and loose files take precedence over all packages.
 
 #### Material Configurations
 

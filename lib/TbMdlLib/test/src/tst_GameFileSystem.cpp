@@ -18,6 +18,7 @@
  */
 
 #include "TestEnvironment.h"
+#include "TestLogger.h"
 #include "base/Logger.h"
 #include "fs/DiskFileSystem.h"
 #include "fs/PathInfo.h"
@@ -79,8 +80,9 @@ TEST_CASE("GameFileSystem")
       loose_vs_zip.txt - contents: "anox1"
     anox2.zip
       zip_order.txt - contents: "anox2", overrides anox1.zip
-    anox10.zip
-      zip_order.txt - contents: "anox10", overrides anox2.zip
+    anox10.zip - not mounted by Anachronox
+      zip_order.txt - contents: "anox10"
+    notes.dat - not a data package, not mounted by Anachronox
   natural_order
     pak2.pak
       shared.txt - contents: "pak2"
@@ -223,7 +225,8 @@ TEST_CASE("GameFileSystem")
       {},
     };
 
-    fs.initialize(environmentConfig, anoxConfig, fixturePath, {}, logger);
+    auto anoxLogger = TestLogger{};
+    fs.initialize(environmentConfig, anoxConfig, fixturePath, {}, anoxLogger);
 
     SECTION("Mounts data packages at their lowercase name")
     {
@@ -241,9 +244,15 @@ TEST_CASE("GameFileSystem")
       CHECK(fs::readTextFile(fs, "models/zip_override.txt") == "anox1");
     }
 
-    SECTION("Mounts zip files in natural order")
+    SECTION("Mounts zip files anox0.zip to anox9.zip in order")
     {
-      CHECK(fs::readTextFile(fs, "zip_order.txt") == "anox10");
+      CHECK(fs::readTextFile(fs, "zip_order.txt") == "anox2");
+    }
+
+    SECTION("Ignores packages that Anachronox doesn't mount")
+    {
+      CHECK(fs.pathInfo("notes") == fs::PathInfo::Unknown);
+      CHECK(anoxLogger.countMessages(LogLevel::Error) == 0);
     }
 
     SECTION("Loose files override packages")
