@@ -93,6 +93,7 @@ target_sources(TbMdlLib
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadMaterialCollections.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadMd2Model.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadMd3Model.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadMdaModel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadMdlModel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadMdxModel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadMipTexture.cpp

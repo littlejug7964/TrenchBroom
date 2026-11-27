@@ -1,0 +1,8 @@
+MDA1
+profile {
+  skin {
+    pass {
+      map models/test/profile_a.tga
+    }
+  }
+}

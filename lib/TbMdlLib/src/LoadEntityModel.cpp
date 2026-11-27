@@ -32,6 +32,7 @@
 #include "mdl/LoadImageSpriteModel.h"
 #include "mdl/LoadMd2Model.h"
 #include "mdl/LoadMd3Model.h"
+#include "mdl/LoadMdaModel.h"
 #include "mdl/LoadMdlModel.h"
 #include "mdl/LoadMdxModel.h"
 #include "mdl/LoadSpriteModel.h"
@@ -69,6 +70,10 @@ Result<EntityModelData> loadEntityModelData(
            if (canLoadAnoxMd2Model(path, reader))
            {
              return loadAnoxMd2Model(modelName, reader, fs, logger);
+           }
+           if (canLoadMdaModel(path, reader))
+           {
+             return loadMdaModel(modelName, reader, fs, logger);
            }
            if (canLoadBspModel(path, reader))
            {
